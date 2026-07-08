@@ -36,24 +36,26 @@
       width: 100%; padding: 0.65rem; border-radius: 10px; border: 1px solid #444;
       background: #2c2c54; color: #fff; font-size: 1rem; margin-bottom: 0.6rem;
     }
-    #vista-bienvenida {
-      position: relative;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 0;
-      overflow: hidden;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-image: url("ienvenida/portatil.jpg");
-    }
-    
-    @media (max-width: 600px) {
-      #vista-bienvenida {
-        background-image: url("ienvenida/movil.jpg");
-      }
-    }
+  #vista-bienvenida {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0;
+  overflow: hidden;
+  background-image: url("img/portatil.jpg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+@media (max-width: 600px) {
+  #vista-bienvenida {
+    background-image: url("img/movil.jpg");
+    background-size: contain;
+    background-color: #000;
+  }
+}
     
     .toca {
       position: absolute;
