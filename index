@@ -1,0 +1,286 @@
+r'''<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hora de aventuras</title>
+  <link rel="icon" type="image/png" href="icon/icon.png.png">
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #1a1a2e;
+      color: #f1f1f1;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .fondo-video {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .vista {
+      display: none;
+      padding: 1.2rem;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+    .vista.activa { display: flex; flex-direction: column; }
+    h1 { font-size: 1.3rem; text-align: center; margin: 0 0 1.2rem; }
+    input {
+      width: 100%; padding: 0.65rem; border-radius: 10px; border: 1px solid #444;
+      background: #2c2c54; color: #fff; font-size: 1rem; margin-bottom: 0.6rem;
+    }
+    button {
+      background: #6c63ff; color: white; border: none; padding: 0.75rem 1.2rem;
+      border-radius: 12px; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 0.5rem;
+    }
+    button.secundario { background: transparent; border: 1px solid #6c63ff; }
+    button:active { transform: scale(0.98); }
+    .nombre-turno { text-align: center; font-size: 1.4rem; font-weight: 600; margin: 0.6rem 0 1.2rem; }
+    .carta-juego {
+      background: #f4f1ff; color: #2c2c54; border-radius: 16px; padding: 1.5rem; text-align: center;
+      margin: 1rem 0; min-height: 140px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .carta-juego .tipo { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6c63ff; font-weight: 700; }
+    .carta-juego .texto { font-size: 1.05rem; font-weight: 500; }
+    .footer-link { text-align: center; margin-top: 1.5rem; }
+    .footer-link a { color: #aaa; font-size: 0.8rem; }
+    #vista-bienvenida {
+      position: relative; justify-content: center; align-items: center; min-height: 100vh; padding: 0; overflow: hidden;
+    }
+    #logoEntrada {
+      position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;
+    }
+    .btn-jugar {
+      position: relative; z-index: 1; max-width: 220px; font-size: 1.2rem; font-weight: 700;
+      letter-spacing: 0.05em; opacity: 0; transform: translateY(10px);
+      transition: opacity 1s ease-in, transform 1s ease-in; pointer-events: none;
+    }
+    .btn-jugar.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .barrido-negro {
+      position: fixed; inset: 0; background: #000; z-index: 2000; transform: scaleX(0);
+      transform-origin: left; pointer-events: none;
+    }
+    .barrido-negro.entrando { animation: barridoEntra 0.4s ease-in forwards; }
+    .barrido-negro.saliendo { transform-origin: right; animation: barridoSale 0.4s ease-in forwards; }
+    @keyframes barridoEntra { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes barridoSale { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+    .campo-nombre-wrap { position: relative; margin-bottom: 0.6rem; }
+    .campo-nombre-wrap input { margin-bottom: 0; padding-right: 2.5rem; }
+    .btn-quitar-jugador {
+      position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%); width: 1.8rem; height: 1.8rem;
+      border-radius: 50%; background: #ff4757; color: #fff; border: none; font-size: 1rem; line-height: 1; padding: 0; margin: 0; cursor: pointer;
+    }
+    .mazos-contenedor { display: flex; flex-direction: column; gap: 0.8rem; align-items: center; }
+    .mazo-circular {
+      display: flex; align-items: center; gap: 1rem; width: 100%; max-width: 320px; padding: 0.5rem;
+      border-radius: 100px; border: none; cursor: pointer; color: white; text-align: left;
+    }
+    .mazo-circular .icono-circular {
+      width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+    }
+    .mazo-circular .icono-circular img { width: 70%; height: 70%; object-fit: contain; }
+    .mazo-circular .texto-mazo { display: flex; flex-direction: column; }
+    .mazo-circular .texto-mazo .nombre-mazo { font-weight: 700; font-size: 1rem; }
+    .mazo-circular .texto-mazo .sub { font-weight: 400; font-size: 0.75rem; opacity: 0.85; }
+    .mazo-prismo { background: linear-gradient(135deg,#8e6bff,#4834d4); }
+    .mazo-lich { background: linear-gradient(135deg,#2c5f4a,#0d2b21); }
+    .mazo-caracol { background: linear-gradient(135deg,#20a89e,#0f5a54); }
+    @media (max-width: 600px) {
+      .mazo-circular { justify-content: center; max-width: 100px; padding: 0; border-radius: 50%; }
+      .mazo-circular .texto-mazo { display: none; }
+      .mazo-circular .icono-circular { width: 80px; height: 80px; }
+    }
+    @media (min-width: 601px) {
+      .mazos-contenedor { flex-direction: column; align-items: center; }
+      .mazo-circular { justify-content: center; max-width: 110px; padding: 0; border-radius: 50%; }
+      .mazo-circular .texto-mazo { display: none; }
+      .mazo-circular .icono-circular { width: 90px; height: 90px; }
+    }
+    .btn-musica {
+      position: fixed !important; top: 1rem; right: 1rem; z-index: 999; width: 70px; height: 70px;
+      border-radius: 50%; background: rgba(0,0,0,0.5); border: none; padding: 0; margin: 0; cursor: pointer; overflow: hidden;
+    }
+    .btn-musica img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .btn-musica::after {
+      content: ""; position: absolute; top: 50%; left: 8%; width: 84%; height: 3px; background: #ff4757;
+      transform: translateY(-50%) rotate(-45deg); border-radius: 2px; opacity: 0; transition: opacity 0.15s ease;
+    }
+    .btn-musica.silenciado::after { opacity: 1; }
+  </style>
+</head>
+<body>
+  <video class="fondo-video" id="fondoVideo" loop muted playsinline></video>
+  <audio id="musicaFondo" src="musica/musica.mp3" loop></audio>
+
+  <button class="btn-musica" id="btnMusica">
+    <img src="icono/musica.gif" alt="Música">
+  </button>
+
+  <div class="vista activa" id="vista-bienvenida">
+    <video id="logoEntrada" src="icono/logo.mp4" autoplay muted playsinline></video>
+    <button id="btnJugar" class="btn-jugar">Jugar</button>
+  </div>
+
+  <div class="vista" id="vista-config">
+    <input type="number" id="numJugadores" min="2" max="6" value="2">
+    <div id="camposNombres"></div>
+    <button id="btnAgregarJugador" class="secundario">Añadir jugador</button>
+    <button id="btnListo">Listo</button>
+  </div>
+
+  <div class="barrido-negro" id="barridoNegro"></div>
+
+  <div class="vista" id="vista-menu">
+    <h1>Turno de</h1>
+    <div class="nombre-turno" id="nombreTurno"></div>
+
+    <div class="mazos-contenedor">
+      <button class="mazo-circular mazo-prismo" data-mazo="ventaja">
+        <span class="icono-circular"><img src="iconos/prismo.png" alt="Prismo"></span>
+        <span class="texto-mazo"><span class="nombre-mazo">Prismo</span><span class="sub">Ventaja</span></span>
+      </button>
+
+      <button class="mazo-circular mazo-lich" data-mazo="desventaja">
+        <span class="icono-circular"><img src="iconos/lich.png" alt="Lich"></span>
+        <span class="texto-mazo"><span class="nombre-mazo">Lich</span><span class="sub">Desventaja</span></span>
+      </button>
+
+      <button class="mazo-circular mazo-caracol" data-mazo="caracol">
+        <span class="icono-circular"><img src="iconos/caracol.png" alt="Caracol"></span>
+        <span class="texto-mazo"><span class="nombre-mazo">Caracol</span><span class="sub">Ventaja o desventaja</span></span>
+      </button>
+    </div>
+
+    <div class="footer-link"><a href="#" id="btnReiniciarTodo">Reiniciar partida</a></div>
+  </div>
+
+  <div class="vista" id="vista-carta">
+    <h1 id="tituloCartaVista">Carta</h1>
+    <div class="carta-juego" id="cartaJuego">
+      <div class="tipo" id="tipoCartaJuego"></div>
+      <div class="texto" id="textoCartaJuego"></div>
+    </div>
+    <button id="btnSiguienteTurno">Siguiente jugador</button>
+  </div>
+
+  <script>
+    const VENTAJAS = ["Avanza dos casillas", "Repite turno", "Inmune a la próxima desventaja", "Roba una carta a otro jugador", "Elige tu próxima casilla", "Doble puntos esta ronda"];
+    const DESVENTAJAS = ["Pierdes un turno", "Retrocede tres casillas", "Vuelve a la casilla de salida", "No puedes hablar hasta tu próximo turno", "Cambia de sitio con otro jugador"];
+    let estado = cargarEstado();
+
+    function cargarEstado() { const g = localStorage.getItem("estadoJuegoTurnos"); return g ? JSON.parse(g) : null; }
+    function guardarEstado() { localStorage.setItem("estadoJuegoTurnos", JSON.stringify(estado)); }
+    function mezclar(arr) { return arr.map(v => [Math.random(), v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+    function mostrarVista(id) { document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa")); document.getElementById("vista-" + id).classList.add("activa"); }
+
+    const numJugadoresInput = document.getElementById("numJugadores");
+    const camposNombres = document.getElementById("camposNombres");
+    let totalJugadores = 2;
+
+    function crearCampoNombre(indice) {
+      const wrap = document.createElement("div"); wrap.className = "campo-nombre-wrap";
+      const input = document.createElement("input"); input.placeholder = "Nombre jugador " + (indice + 1); input.id = "nombre" + indice;
+      wrap.appendChild(input);
+      if (indice >= 2) {
+        const btnQuitar = document.createElement("button");
+        btnQuitar.className = "btn-quitar-jugador"; btnQuitar.textContent = "✕"; btnQuitar.type = "button";
+        btnQuitar.addEventListener("click", () => { wrap.remove(); totalJugadores--; actualizarBotonAgregar(); renombrarPlaceholders(); });
+        wrap.appendChild(btnQuitar);
+      }
+      return wrap;
+    }
+
+    function renombrarPlaceholders() { camposNombres.querySelectorAll(".campo-nombre-wrap input").forEach((input, i) => input.placeholder = "Nombre jugador " + (i + 1)); }
+    function actualizarBotonAgregar() { const btnAgregar = document.getElementById("btnAgregarJugador"); btnAgregar.style.display = totalJugadores >= 6 ? "none" : "block"; numJugadoresInput.value = totalJugadores; }
+    function actualizarCamposNombres() { camposNombres.innerHTML = ""; for (let i = 0; i < totalJugadores; i++) camposNombres.appendChild(crearCampoNombre(i)); actualizarBotonAgregar(); }
+
+    document.getElementById("btnAgregarJugador").addEventListener("click", () => { if (totalJugadores >= 6) return; totalJugadores++; actualizarCamposNombres(); });
+    document.getElementById("btnListo").addEventListener("click", () => {
+      const nombres = [];
+      for (let i = 0; i < totalJugadores; i++) {
+        const val = document.getElementById("nombre" + i).value.trim();
+        nombres.push(val || ("Jugador " + (i + 1)));
+      }
+      estado = {
+        jugadores: nombres.map((nombre, id) => ({ id, nombre })),
+        turnoIndex: 0,
+        poolVentaja: mezclar([...VENTAJAS]),
+        poolDesventaja: mezclar([...DESVENTAJAS]),
+        poolCaracol: mezclar([...VENTAJAS.map(t => ({ texto: t, tipo: "Ventaja" })), ...DESVENTAJAS.map(t => ({ texto: t, tipo: "Desventaja" }))])
+      };
+      guardarEstado();
+      transicionABarrido(() => irAMenuTurno());
+    });
+
+    function jugadorActual() { return estado.jugadores[estado.turnoIndex % estado.jugadores.length]; }
+    function irAMenuTurno() { mostrarVista("menu"); document.getElementById("nombreTurno").textContent = jugadorActual().nombre; }
+
+    document.querySelectorAll(".mazo-circular").forEach(btn => btn.addEventListener("click", () => sacarCarta(btn.dataset.mazo)));
+
+    function sacarCarta(mazo) {
+      const jugador = jugadorActual(); let tipo = "", texto = "";
+      if (mazo === "ventaja") { if (estado.poolVentaja.length === 0) estado.poolVentaja = mezclar([...VENTAJAS]); texto = estado.poolVentaja.pop(); tipo = "Ventaja"; }
+      else if (mazo === "desventaja") { if (estado.poolDesventaja.length === 0) estado.poolDesventaja = mezclar([...DESVENTAJAS]); texto = estado.poolDesventaja.pop(); tipo = "Desventaja"; }
+      else if (mazo === "caracol") {
+        if (estado.poolCaracol.length === 0) estado.poolCaracol = mezclar([...VENTAJAS.map(t => ({ texto: t, tipo: "Ventaja" })), ...DESVENTAJAS.map(t => ({ texto: t, tipo: "Desventaja" }))]);
+        const c = estado.poolCaracol.pop(); texto = c.texto; tipo = c.tipo;
+      }
+      guardarEstado();
+      document.getElementById("tituloCartaVista").textContent = jugador.nombre;
+      document.getElementById("tipoCartaJuego").textContent = tipo;
+      document.getElementById("textoCartaJuego").textContent = texto;
+      mostrarVista("carta");
+    }
+
+    document.getElementById("btnSiguienteTurno").addEventListener("click", () => { estado.turnoIndex = (estado.turnoIndex + 1) % estado.jugadores.length; guardarEstado(); irAMenuTurno(); });
+    document.getElementById("btnReiniciarTodo").addEventListener("click", (e) => { e.preventDefault(); if (confirm("¿Borrar la partida y empezar de cero?")) { localStorage.removeItem("estadoJuegoTurnos"); location.reload(); } });
+
+    const VIDEOS_ESCRITORIO = ["iniciopc/fondopc.mp4"];
+    const VIDEOS_MOVIL = ["iniciomovil/fondo1-movil.mp4.mp4", "iniciomovil/fondo2-movil.mp4.mp4", "iniciomovil/fondo3-movil.mp4.mp4", "iniciomovil/fondo4-movil.mp4.mp4", "iniciomovil/fondo5-movil.mp4.mp4", "iniciomovil/fondo6-movil.mp4.mp4"];
+    function elegirAleatorio(lista) { return lista[Math.floor(Math.random() * lista.length)]; }
+    function esMovilVertical() { return window.matchMedia("(orientation: portrait)").matches; }
+    function configurarFondo() { const video = document.getElementById("fondoVideo"); const lista = esMovilVertical() ? VIDEOS_MOVIL : VIDEOS_ESCRITORIO; video.src = elegirAleatorio(lista); video.muted = true; video.load(); video.play().catch(() => {}); }
+    configurarFondo();
+    let orientacionActual = esMovilVertical();
+    window.addEventListener("resize", () => { const nuevaOrientacion = esMovilVertical(); if (nuevaOrientacion !== orientacionActual) { orientacionActual = nuevaOrientacion; configurarFondo(); } });
+
+    const musica = document.getElementById("musicaFondo");
+    const btnMusica = document.getElementById("btnMusica");
+    btnMusica.addEventListener("click", () => { if (musica.paused) { musica.play(); btnMusica.classList.remove("silenciado"); } else { musica.pause(); btnMusica.classList.add("silenciado"); } });
+    document.getElementById("btnJugar").addEventListener("click", () => { mostrarVista("config"); });
+
+    const videoLogo = document.getElementById("logoEntrada");
+    const btnJugarEl = document.getElementById("btnJugar");
+    if (videoLogo) {
+      videoLogo.loop = false;
+      videoLogo.addEventListener("ended", () => { btnJugarEl.classList.add("visible"); });
+      setTimeout(() => { if (btnJugarEl && !btnJugarEl.classList.contains("visible") && videoLogo.paused && videoLogo.currentTime === 0) { btnJugarEl.classList.add("visible"); } }, 4000);
+    }
+
+    actualizarCamposNombres();
+    function transicionABarrido(callback) {
+      const barrido = document.getElementById("barridoNegro");
+      barrido.classList.remove("saliendo"); barrido.classList.add("entrando");
+      setTimeout(() => { callback(); barrido.classList.remove("entrando"); barrido.classList.add("saliendo"); setTimeout(() => barrido.classList.remove("saliendo"), 400); }, 400);
+    }
+    if (estado) irAMenuTurno();
+  </script>
+</body>
+</html>'''
+
+path = 'output/juego_hora_de_aventuras.html'
+import os
+os.makedirs('output', exist_ok=True)
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print(path)
