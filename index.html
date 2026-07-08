@@ -36,6 +36,48 @@
       width: 100%; padding: 0.65rem; border-radius: 10px; border: 1px solid #444;
       background: #2c2c54; color: #fff; font-size: 1rem; margin-bottom: 0.6rem;
     }
+    #vista-bienvenida {
+      position: relative;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-image: url("img/portatil.jpg");
+    }
+    
+    @media (max-width: 600px) {
+      #vista-bienvenida {
+        background-image: url("img/movil.jpg");
+      }
+    }
+    
+    .toca {
+      position: absolute;
+      left: 50%;
+      bottom: 25%;
+      transform: translateX(-50%);
+      z-index: 2;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: rgba(0,0,0,0.35);
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+    }
+    
+    .btn-musica {
+      display: none;
+    }
+    
+    .btn-musica.visible {
+      display: block;
+    }
+    
     button {
       background: #6c63ff; color: white; border: none; padding: 0.75rem 1.2rem;
       border-radius: 12px; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 0.5rem;
@@ -120,7 +162,7 @@
 
   
 <body>
-  <video class="fondo-video" id="fondoVideo" loop muted playsinline></video>
+
   <audio id="musicaFondo" src="musica/musica.mp3" loop></audio>
 
   <button class="btn-musica" id="btnMusica">
@@ -258,16 +300,12 @@
     const musica = document.getElementById("musicaFondo");
     const btnMusica = document.getElementById("btnMusica");
     btnMusica.addEventListener("click", () => { if (musica.paused) { musica.play(); btnMusica.classList.remove("silenciado"); } else { musica.pause(); btnMusica.classList.add("silenciado"); } });
-    document.getElementById("btnJugar").addEventListener("click", () => { mostrarVista("config"); });
-
-    const videoLogo = document.getElementById("logoEntrada");
-    const btnJugarEl = document.getElementById("btnJugar");
-    if (videoLogo) {
-      videoLogo.loop = false;
-      videoLogo.addEventListener("ended", () => { btnJugarEl.classList.add("visible"); });
-      setTimeout(() => { if (btnJugarEl && !btnJugarEl.classList.contains("visible") && videoLogo.paused && videoLogo.currentTime === 0) { btnJugarEl.classList.add("visible"); } }, 4000);
-    }
-
+    document.getElementById("btnToca").addEventListener("click", () => {
+      mostrarVista("config");
+      musica.play().catch(() => {});
+      btnMusica.classList.add("visible");
+    });
+    
     actualizarCamposNombres();
     function transicionABarrido(callback) {
       const barrido = document.getElementById("barridoNegro");
