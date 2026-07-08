@@ -62,8 +62,8 @@
       transform: translateX(-50%);
       z-index: 2;
       text-align: center;
-      font-size: 1.2rem;
-      font-weight: 700;
+      font-size: 2.5rem;
+      font-weight: 7000;
       letter-spacing: 0.04em;
       background: rgba(0,0,0,0.35);
       padding: 0.7rem 1rem;
@@ -171,7 +171,7 @@
 
   <div class="vista activa" id="vista-bienvenida">
     <div class="bienvenida-fondo"></div>
-    <button id="btnToca" class="toca">Toca para comenzar</button>
+    <div id="tocaArea" class="toca" role="button" aria-label="Toca la panatalla">Toca la pantalla</div>
   </div>
 
   <div class="vista" id="vista-config">
@@ -226,6 +226,25 @@
     function mezclar(arr) { return arr.map(v => [Math.random(), v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
     function mostrarVista(id) { document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa")); document.getElementById("vista-" + id).classList.add("activa"); }
 
+    const vistaBienvenida = document.getElementById("vista-bienvenida");
+    const btnMusica = document.getElementById("btnMusica");
+    const musica = document.getElementById("musicaFondo");
+    
+    function comenzarDesdeBienvenida() {
+      // evitar ejecuciones repetidas
+      vistaBienvenida.removeEventListener("click", comenzarDesdeBienvenida);
+      vistaBienvenida.removeEventListener("touchstart", comenzarDesdeBienvenida);
+    
+      mostrarVista("config");
+      musica.play().catch(() => {});
+      btnMusica.classList.add("visible");
+    }
+    
+    // escuchar tanto click como touchstart para móviles
+    vistaBienvenida.addEventListener("click", comenzarDesdeBienvenida);
+    vistaBienvenida.addEventListener("touchstart", comenzarDesdeBienvenida, { passive: true });
+
+    
     const numJugadoresInput = document.getElementById("numJugadores");
     const camposNombres = document.getElementById("camposNombres");
     let totalJugadores = 2;
