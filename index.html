@@ -316,7 +316,6 @@
     let orientacionActual = esMovilVertical();
     window.addEventListener("resize", () => { const nuevaOrientacion = esMovilVertical(); if (nuevaOrientacion !== orientacionActual) { orientacionActual = nuevaOrientacion; configurarFondo(); } });
 
-    const musica = document.getElementById("musicaFondo");
     const btnMusica = document.getElementById("btnMusica");
     btnMusica.addEventListener("click", () => { if (musica.paused) { musica.play(); btnMusica.classList.remove("silenciado"); } else { musica.pause(); btnMusica.classList.add("silenciado"); } });
     document.getElementById("btnToca").addEventListener("click", () => {
